@@ -81,6 +81,14 @@ plt.plot(np.arange(result.shape[1]), result[0,:,1].squeeze())
 plt.xlabel('frames')
 plt.show()
 
+time_data = []
+for i in range(result.shape[1]):
+    time_data.append([i, result[0,i,1]])
+json_content = {"limping":time_data}
+json_dump = json_dumps(json_content)
+with open('./timeLabel.json') as outfile:
+    outfile.write(json_dump)
+
 '''
 ### Code for plot one image
 skel = data[0,:].squeeze()
