@@ -83,10 +83,10 @@ plt.show()
 
 time_data = []
 for i in range(result.shape[1]):
-    time_data.append([i, result[0,i,1]])
+    time_data.append([str(i), str(result[0,i,1])])
 json_content = {"limping":time_data}
-json_dump = json_dumps(json_content)
-with open('./timeLabel.json') as outfile:
+json_dump = json.dumps(json_content)
+with open('./timeLabel.json','w') as outfile:
     outfile.write(json_dump)
 
 '''
@@ -105,6 +105,7 @@ for k, line in enumerate(selected_bone_list):
     plt.plot(xdata, ydata)
 '''
 ### Code for plot animation of selected bones
+data = data.squeeze()
 fig = plt.figure()
 ax = plt.axes(xlim=(-2,2), ylim=(-2,2))
 
