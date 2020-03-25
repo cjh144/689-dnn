@@ -73,7 +73,7 @@ frames = data.shape[0]
 # code for prediction
 data = np.array([data])
 print(data.shape)
-model = keras.models.load_model('/content/drive/My Drive/gait/models/400.h5')
+model = keras.models.load_model('./models/400.h5')
 result = model.predict(data)
 print(result)
 print(result.shape)
