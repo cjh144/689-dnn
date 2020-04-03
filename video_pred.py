@@ -78,8 +78,21 @@ def pred(model, data):
 
 def show_animate(x_data, result, path):
     frames = x_data.shape[0]
-    name = path
+    title = path
+    name = path.split('/')[-2]
     video = np.load(path + 'output.npy')
+
+    fig = plt.figure()
+    plt.plot(np.arange(frames), result[0,:,1].squeeze(), 'C0')
+    plt.savefig(name + '.png')
+
+    time_data = []
+    for i in range(result.shape[1]):
+        time_data.append([str(i), str(result[0,i,1])])
+    json_content = {"limping":time_data}
+    json_dump = json.dumps(json_content)
+    with open('./timeLabel-'+name+'.json','w') as outfile:
+        outfile.write(json_dump)
 
     fig = plt.figure()
     ax1 = fig.add_subplot(1,3,1)
@@ -89,7 +102,7 @@ def show_animate(x_data, result, path):
     # ax1 is the animation of skeleton
     ax2.set_xlim(-1.5, 1.5)
     ax2.set_ylim(-1.5, 1.5)
-    ax2.set_title(name)
+    ax2.set_title(title)
     # ax2 is the animation of possibility
     ax3.set_xlim(0, frames)
     ax3.set_ylim(0,1)
@@ -116,26 +129,14 @@ def show_animate(x_data, result, path):
     ani = animation.ArtistAnimation(fig, lines, interval=100, blit=True)
     Writer = animation.writers['ffmpeg']
     writer = Writer(fps=30, metadata=dict(artist='Me'), bitrate=1800)
-    name = path.split('/')[-2]
     ani.save(name + '.mp4', writer=writer)
 
-    fig = plt.figure()
-    plt.plot(np.arange(frames), result[0,:,1].squeeze(), 'C0')
-    plt.savefig(name + '.png')
-
-    time_data = []
-    for i in range(result.shape[1]):
-        time_data.append([str(i), str(result[0,i,1])])
-    json_content = {"limping":time_data}
-    json_dump = json.dumps(json_content)
-    with open('./timeLabel-'+name+'.json','w') as outfile:
-        outfile.write(json_dump)
 
     #plt.show()
 
 
 def main():
-    path = './test/walk5/'
+    path = '../test/walk5/'
     model = keras.models.load_model('./models/front-slow/model.h5')
     data = import_data(path)
     result = pred(model, data)
