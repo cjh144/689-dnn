@@ -10,9 +10,9 @@ video prediction:
 put the video in npy format, json file in a directory:
 
 video
-|--<video in npy format>
-|--output
-   |--<JSON file>
+--<video in npy format>
+--output
+   --<JSON file>
 
 Then change the path in main function in video-pred.py, run script.
 It will generate the prediction figure, time label json file and a animation which shows the video, skeleton and prediction result.
