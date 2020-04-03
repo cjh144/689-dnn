@@ -3,11 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from IPython.display import HTML
 import tensorflow.keras as keras
 
 #path = '/content/drive/My Drive/DL-dataset/limp/27/'
-path = '/content/drive/My Drive/DL-dataset/test/walk1/output/'
+path = './test/walk1/output/'
 file_list = os.listdir(path)
 file_list.sort()
 
@@ -31,7 +30,7 @@ bone_list = ( (0,1), (1,2), (2,3), (3,4), (1,5), (5,6), (6,7),
     (1,8), (8,9), (9,10), (10,11), (11,24), (11,22), (22,23),
     (8,12), (12,13), (13,14), (14,21), (14,19), (19,20),
     (0,15), (15,17), (0,16), (16,18))
-joint_list = ( 8,1,2,3,4,5,6,7,9,10,11,22,12,13,14,20 )
+joint_list = ( 8,1,2,3,4,5,6,7,9,10,11,12,13,14 )
 
 selected_bone_list = []
 for bone in bone_list:
@@ -44,7 +43,7 @@ for f in file_list:
     if f.endswith('.json'):
         file_path = path+f 
         with open(file_path) as fp:
-            x,y,c = read_json(fp,0)
+            x,y,_ = read_json(fp,0)
             # for bone in bone_list:
             #     joint1 = bone[0]
             #     joint2 = bone[1]
@@ -63,7 +62,7 @@ for f in file_list:
             y_var = np.amax(y) - np.amin(y)
 
             x = (x-x_mean)/x_var
-            y = (y-y_mean)/y_var
+            y = -(y-y_mean)/y_var
             data.append(np.concatenate([x,y]))
 
 data = np.array(data)
@@ -72,11 +71,11 @@ frames = data.shape[0]
 
 # code for prediction
 data = np.array([data])
-print(data.shape)
-model = keras.models.load_model('./models/400.h5')
+model = keras.models.load_model('./models/360.h5')
 result = model.predict(data)
-print(result)
-print(result.shape)
+fig = plt.figure()
+ax1 = fig.add_subplot(1,2,1)
+ax2 = fig.add_subplot(1,2,2)
 plt.plot(np.arange(result.shape[1]), result[0,:,1].squeeze())
 plt.xlabel('frames')
 plt.show()
@@ -101,13 +100,13 @@ for k, line in enumerate(selected_bone_list):
     joint1 = joint_list.index(joint1)
     joint2 = joint_list.index(joint2)
     xdata = (x[joint1], x[joint2])
-    ydata = (-y[joint1], -y[joint2])
+    ydata = (y[joint1], y[joint2])
     plt.plot(xdata, ydata)
 '''
 ### Code for plot animation of selected bones
 data = data.squeeze()
 fig = plt.figure()
-ax = plt.axes(xlim=(-2,2), ylim=(-2,2))
+ax = plt.axes(xlim=(-1.5,1.5), ylim=(-1.5,1.5))
 
 lines = []
 for bone in selected_bone_list:
@@ -130,7 +129,7 @@ def animate(j):
         joint1 = joint_list.index(joint1)
         joint2 = joint_list.index(joint2)
         xdata = (x[joint1], x[joint2])
-        ydata = (-y[joint1], -y[joint2])
+        ydata = (y[joint1], y[joint2])
         line.set_data(xdata, ydata)
     return lines
 
