@@ -15,7 +15,7 @@ def read_data_2d():
     skel_dim = data.shape[3]
     normal_data = data[:, 0, :, :]
     normal_data = normal_data.reshape([-1,1200,skel_dim])
-    asym_data = data[:, 1:9, :, :]
+    asym_data = data[:, [1,2,4,5,6,8], :, :]
     asym_data = asym_data.reshape([-1,1200,skel_dim])
 
     # cut videos to 50 frame clips
@@ -43,12 +43,18 @@ def read_data_2d():
 
     data_2d= []
     label_2d = []
-    num_deg = 4
+    num_deg = 2
     selected_joints = [0, 20, 4, 5, 6, \
-        8,9,10, 12, 13, 14, 15, 16, 17, 18, 19]
+        8,9,10, 12, 13, 14, 16, 17, 18] # 15,19
     for iter_sample, sample in enumerate(data):
         for iter_k in range(num_deg):
-            theta = random() * 2 * math.pi
+            #theta = random() * 2 * math.pi
+            #theta =  0
+            if random() > 0.5:
+                theta = math.pi * (random()/3 +1/3)
+            else:
+                theta = math.pi * (random()/3 +1/3)
+                #theta = math.pi * (random()/2 + 0.75 )
             out = []
             for i in range(sample.shape[0]):
                 skel = sample[i,:]
@@ -56,12 +62,23 @@ def read_data_2d():
                 y = [skel[i] for i in range(1, len(skel), 3)]
                 z = [skel[i]-2.25 for i in range(2, len(skel), 3)]
                 u = [x[i]*math.cos(theta)+z[i]*math.sin(theta) for i in range(len(x))]
+
+                dx = u[1] - u[0]
+                dy = y[1] - y[0]
+                degree = np.arctan(dx/dy)
+                for i in range(len(u)):
+                    ur = u[i] * np.cos(degree) - y[i] * np.sin(degree)
+                    yr = u[i] * np.sin(degree) + y[i] * np.cos(degree)
+                    u[i] = ur
+                    y[i] = yr
+
                 u_mean = np.mean(u)
                 u_var = np.amax(u) - np.amin(u)
                 y_mean = np.mean(y)
                 y_var = np.amax(y) - np.amin(y)
                 u = (u-u_mean)/u_var
                 y = (y-y_mean)/y_var
+
                 out.append(np.array([u[i] for i in selected_joints]+[y[i] for i in selected_joints]))
             data_2d.append(np.array(out))
             label_2d.append(label[iter_sample])
@@ -140,8 +157,10 @@ def read_data_3d_selected():
         #print(str(i)+str(j) + str(label[j]))
         label_new[i, label[j]] = 1 # when normal, first bit is 1
 
+    #selected_joints = [0, 20, 4, 5, 6, \
+    #    8,9,10, 12, 13, 14, 15, 16, 17, 18, 19]
     selected_joints = [0, 20, 4, 5, 6, \
-        8,9,10, 12, 13, 14, 15, 16, 17, 18, 19]
+        8,9,10, 12, 13, 14, 16, 17, 18]
     joint_index = list()
     f = lambda x:[3*x, 3*x+1, 3*x+2]
     for x in selected_joints:
@@ -308,13 +327,10 @@ def speed_scaling(data):
     data_new = []
     # randomly choose a scaling factor
     n = random()
-    if n > 0.5:
-        scaling = random() * 0.5 + 0.5
-    else:
-        scaling = random() + 1
+    interval = 0.3 + n*0.7 # 0.5 to 1 uniform distribution
+    # this range garentees the quality of the data won't be damaged
     # assume the original interval is 1,
     # the new interval is the scaling factor
-    interval = scaling
     for i in range(num_point):
         # get trace of ith node
         trace = data[:,i]

@@ -182,6 +182,8 @@ def main_2d():
     # and sequence output
     #x_train, y_train, x_test, y_test = read_data_3d_selected()
     x_train, y_train, x_test, y_test = read_data_2d()
+    np.savez('training_data.npz', x_train = x_train, y_train = y_train,
+        x_test = x_test, y_test = y_test)
     print(x_train[0].shape)
     print(x_train[1].shape)
     print(y_train.shape)
@@ -201,6 +203,7 @@ def main_2d():
     model = Sequential()
     #model.add(TimeDistributed(Dense(200, input_shape = (None, 75), activation='relu')))
     #model.add(Dense(200, activation='relu'))
+    model.add( keras.layers.Dropout(0.02, noise_shape = (None, None, input_length)))
     model.add(SimpleRNN(rnn_size, return_sequences=True,
     #model.add(LSTM(rnn_size, return_sequences=True,
         input_shape = (None, input_length)))
@@ -213,7 +216,7 @@ def main_2d():
     model.compile(loss='categorical_crossentropy', optimizer=opt,
         metrics=['accuracy'])
     epochs = 200
-    model.summary()
+    #model.summary()
 
     def train_generator():
         while True:
@@ -258,8 +261,10 @@ def main_2d():
         print(str(result))
         if result[0] < 0.6:
             K.set_value(model.optimizer.lr, 0.0001)
-        if result[0] < 0.4:
+        if result[0] < 0.5:
             K.set_value(model.optimizer.lr, 0.00001)
+        if result[0] < 0.4:
+            K.set_value(model.optimizer.lr, 0.000001)
         model.save('./models/'+str(10+i*10)+'.h5')
 
 

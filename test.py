@@ -103,7 +103,8 @@ def show_animate(x_data, result, label):
 
 def main():
     #x_train, y_train, x_test, y_test = read_data_2d()
-    data = np.load('models/front-slow/training_data.npz', allow_pickle=True)
+    # data = np.load('models/side-dropout-60/training_data.npz', allow_pickle=True)
+    data = np.load('./models/side-rotate/training_data.npz', allow_pickle=True)
     x_train = data['x_train']
     x_test= data['x_test']
     y_train = data['y_train']
@@ -112,7 +113,7 @@ def main():
     print(len(x_train))
     print(len(y_test))
     print(len(y_train))
-    model = keras.models.load_model('./models/front-90/model.h5')
+    model = keras.models.load_model('./models/side-rotate/model.h5')
     for i in range(len(x_test)):
     # for i in range(1):
         x_data = x_test[i]

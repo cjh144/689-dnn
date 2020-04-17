@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
 import tensorflow.keras as keras
+import cv2
 
 bone_list = ( (0,1), (1,2), (2,3), (3,4), (1,5), (5,6), (6,7),
     (1,8), (8,9), (9,10), (10,11), (11,24), (11,22), (22,23),
@@ -56,6 +57,16 @@ def import_data(path):
                 x = [ x[i] for i in joint_list ]
                 y = [ y[i] for i in joint_list ]
 
+                dx = x[1] - x[0]
+                dy = y[1] - y[0]
+                if dy != 0:
+                    degree = np.arctan(dx/dy)
+                    for i in range(len(x)):
+                        xr = x[i] * np.cos(degree) - y[i] * np.sin(degree)
+                        yr = x[i] * np.sin(degree) + y[i] * np.cos(degree)
+                        x[i] = xr
+                        y[i] = yr
+
                 x_mean = np.mean(x)
                 x_var = np.amax(x) - np.amin(x)
                 y_mean = np.mean(y)
@@ -84,6 +95,7 @@ def show_animate(x_data, result, path):
 
     fig = plt.figure()
     plt.plot(np.arange(frames), result[0,:,1].squeeze(), 'C0')
+
     plt.savefig(name + '.png')
 
     time_data = []
@@ -93,6 +105,7 @@ def show_animate(x_data, result, path):
     json_dump = json.dumps(json_content)
     with open('./timeLabel-'+name+'.json','w') as outfile:
         outfile.write(json_dump)
+
 
     fig = plt.figure()
     ax1 = fig.add_subplot(1,3,1)
@@ -126,76 +139,20 @@ def show_animate(x_data, result, path):
             line_i.append(ax2.plot(xdata, ydata, c=c)[0])
         line_i.append(ax1.imshow(video[i,:,:,:].squeeze()))
         lines.append(line_i)
-    ani = animation.ArtistAnimation(fig, lines, interval=100, blit=True)
+    ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=30, metadata=dict(artist='Me'), bitrate=1800)
+    writer = Writer(fps=30, metadata=dict(artist='Jianhao Chen'), bitrate=1800, codec='mpeg4')
     ani.save(name + '.mp4', writer=writer)
 
-
-    #plt.show()
+    plt.show()
 
 
 def main():
-    path = '../test/walk5/'
-    model = keras.models.load_model('./models/front-slow/model.h5')
+    path = '../test/limp8-side/'
+    model = keras.models.load_model('./models/side-rotate/model.h5')
     data = import_data(path)
     result = pred(model, data)
     show_animate(data, result, path)
-    print('makr')
 
 if __name__ == '__main__':
     main()
-'''
-
-fig = plt.figure()
-ax1 = fig.add_subplot(1,3,1)
-ax2 = fig.add_subplot(1,3,2)
-ax3 = fig.add_subplot(1,3,3)
-plt.plot(np.arange(result.shape[1]), result[0,:,1].squeeze())
-plt.xlabel('frames')
-plt.show()
-
-time_data = []
-for i in range(result.shape[1]):
-    time_data.append([str(i), str(result[0,i,1])])
-json_content = {"limping":time_data}
-json_dump = json.dumps(json_content)
-with open('./timeLabel.json','w') as outfile:
-    outfile.write(json_dump)
-
-### Code for plot animation of selected bones
-data = data.squeeze()
-fig = plt.figure()
-ax = plt.axes(xlim=(-1.5,1.5), ylim=(-1.5,1.5))
-
-lines = []
-for bone in selected_bone_list:
-    line, = ax.plot([],[])
-    lines.append(line)
-
-def init():
-    for line in lines:
-        line.set_data([],[])
-    return lines
-
-def animate(j):
-    skel = data[j,:]
-    x = [skel[i] for i in range(16)]
-    y = [skel[i] for i in range(16,32)]
-    for k, line in enumerate(lines):
-        bone = selected_bone_list[k]
-        joint1 = bone[0]
-        joint2 = bone[1]
-        joint1 = joint_list.index(joint1)
-        joint2 = joint_list.index(joint2)
-        xdata = (x[joint1], x[joint2])
-        ydata = (y[joint1], y[joint2])
-        line.set_data(xdata, ydata)
-    return lines
-
-anim = FuncAnimation(fig, animate, init_func=init, frames=frames, interval=50, blit=True)
-
-
-HTML(anim.to_html5_video())
-
-'''
