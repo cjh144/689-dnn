@@ -6,6 +6,7 @@ from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
 import tensorflow.keras as keras
 import cv2
+import argparse
 
 bone_list = ( (0,1), (1,2), (2,3), (3,4), (1,5), (5,6), (6,7),
     (1,8), (8,9), (9,10), (10,11), (11,24), (11,22), (22,23),
@@ -146,7 +147,7 @@ def show_animate(x_data, result, path):
 
     plt.show()
 
-
+    
 def main():
     path = '../test/limp8-side/'
     model = keras.models.load_model('./models/side-rotate/model.h5')
