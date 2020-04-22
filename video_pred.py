@@ -87,6 +87,61 @@ def pred(model, data):
     result = model.predict(data)
     return result
 
+def show_animate_no_video(x_data, result, path):
+    frames = x_data.shape[0]
+    title = path
+    name = path.split('/')[-2]
+
+    fig = plt.figure()
+    plt.plot(np.arange(frames), result[0,:,1].squeeze(), 'C0')
+
+    plt.savefig(name + '.png')
+
+    time_data = []
+    for i in range(result.shape[1]):
+        time_data.append([str(i), str(result[0,i,1])])
+    json_content = {"limping":time_data}
+    json_dump = json.dumps(json_content)
+    with open('./timelabel-'+name+'.json','w') as outfile:
+        outfile.write(json_dump)
+
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(1,2,1)
+    ax2 = fig.add_subplot(1,2,2)
+
+    # ax1 is the animation of skeleton
+    ax1.set_xlim(-1.5, 1.5)
+    ax1.set_ylim(-1.5, 1.5)
+    ax1.set_title(title)
+    # ax2 is the animation of possibility
+    ax2.set_xlim(0, frames)
+    ax2.set_ylim(0,1)
+    ax2.set_title('possibility of limping')
+
+    lines = []
+    for i in range(frames):
+        line_i = []
+        line_i.append(ax2.plot( np.arange(i+1), result[0,:(i+1),1].squeeze(), 'C0')[0])
+        skel = x_data[i,:]
+        x = [skel[j] for j in range(14)]
+        y = [skel[j] for j in range(14,28)]
+        for k, bone in enumerate(selected_bone_list):
+            joint1 = bone[0]
+            joint2 = bone[1]
+            joint1 = joint_list.index(joint1)
+            joint2 = joint_list.index(joint2)
+            xdata = (x[joint1], x[joint2])
+            ydata = (y[joint1], y[joint2])
+            c = 'C' + str(k)
+            line_i.append(ax1.plot(xdata, ydata, c=c)[0])
+        lines.append(line_i)
+    ani = animation.ArtistAnimation(fig, lines, interval=50, blit=True)
+    # writer = animation.writers['ffmpeg']
+    # writer = writer(fps=30, metadata=dict(artist='jianhao chen'), bitrate=1800, codec='mpeg4')
+    # ani.save(name + '.mp4', writer=writer)
+
+    plt.show()
 
 def show_animate(x_data, result, path):
     frames = x_data.shape[0]
@@ -153,7 +208,7 @@ def main():
     model = keras.models.load_model('./models/side-rotate/model.h5')
     data = import_data(path)
     result = pred(model, data)
-    show_animate(data, result, path)
+    show_animate_no_video(data, result, path)
 
 if __name__ == '__main__':
     main()
